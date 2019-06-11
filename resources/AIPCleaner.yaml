@@ -1,0 +1,24 @@
+Dashboard:
+  URL: http://demoserver:8090/CAST-Health-Engineering/rest
+  username: admin
+  password: cast
+  domain: AAD
+ 
+CMS:
+  pmx_file: D:\\CAST\\WORK\\cast-ms.connectionProfiles.pmx
+ 
+# Retention policy legends:
+# M - Monthly
+# Q - Quarterly
+# Y - Yearly
+retention_policy:
+  current_year: M
+  prev_year: Q
+  other_years: Y
+  keep_baseline: true
+  # This setting ensures that the latest N snapshots are NEVER deleted.
+  keep_latest_n_snapshots: 5
+
+other_settings:
+  log_folder: c:\src\python\AIP_SnapshotCleaner
+  cast_home: c:\CAST\8.3
