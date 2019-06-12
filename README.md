@@ -26,7 +26,7 @@ retention_policy:<br>
   current_year: M<br>
   prev_year: Q<br>
   other_years: Y<br>
-
+<p>
 Use the following option to ensure that the latest N number of snapshots are always kept.
   keep_latest_n_snapshots: 5
   
