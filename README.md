@@ -1,10 +1,10 @@
 <strong>AIP_SnapshotCleaner</strong>
 
-This script can be used to cleanup oudated snapshots in CAST AIP. Snapshots are cleanup using the retention criteria specified in 
+This script can be used to cleanup older snapshots in CAST AIP. Snapshots are cleaned up based on  the retention criteria specified in 
 the resources/AIPCleaner.yaml file.
 
 <strong>Prerequisites</strong>:<br>
-The script is written in Python. Ensure that you have Python 3.6 or above installed. 
+The script is written in Python. Ensure that you have Python <b>3.6</b> or above installed. 
 It uses the following Python packages. Ensure these are installed using the Python PIP command. PIP installs dependent packages, where needed.
 
 <li>requests</li>
