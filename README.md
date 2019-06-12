@@ -19,7 +19,8 @@ It uses the following Python packages. Ensure these are installed using the Pyth
 At this time, the script support the following retention criterias:
 <li>M - Retain monthly snapshots</li>
 <li>Q - Retain quarterly snapshots</li>
-<li>Y - Retain yearly snapshots</li>
+<li>Y - Retain yearly snapshots</li><br>
+
 You setup the criteria as follows, for example, which will retain monthly snapshots for the current year, quarterly snapshots for the prior year and yearly snapshots for the rest of the years.
 <p>
 
