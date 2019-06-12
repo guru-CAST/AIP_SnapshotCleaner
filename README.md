@@ -21,16 +21,17 @@ At this time, the script support the following retention criterias:
 <li>Q - Retain quarterly snapshots</li>
 <li>Y - Retain yearly snapshots</li>
 You setup the criteria as follows, for example, which will retain monthly snapshots for the current year, quarterly snapshots for the prior year and yearly snapshots for the rest of the years.
+<p>
 
 retention_policy:<br>
   current_year: M<br>
   prev_year: Q<br>
   other_years: Y<br>
 <p>
-Use the following option to ensure that the latest N number of snapshots are always kept.
+Use the following option to ensure that the latest N number of snapshots are always kept:<br>
   keep_latest_n_snapshots: 5
   
-Additionally, use the following option to retain baseline snapshots:
+Additionally, use the following option to retain baseline snapshots:<br>
   keep_baseline: true
   
 Other settings:
