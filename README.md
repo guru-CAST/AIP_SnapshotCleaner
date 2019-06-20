@@ -1,4 +1,4 @@
-#AIP_SnapshotCleaner
+<strong>AIP_SnapshotCleaner</strong>:<br>
 
 This script can be used to cleanup older snapshots in CAST AIP. Snapshots are cleaned up based on  the retention criteria specified in 
 the resources/AIPCleaner.yaml file.
