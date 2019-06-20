@@ -49,4 +49,4 @@ The script can by running by invoking python and passing in the name of the scri
 
 ``python AIPSnapshotCleaner.py`` - This will invoke the script in a display only mode, where it does not delete snapshots, but will display which snapshots will be dropped. To drop outdated snapshots, invoke the script with a __-drop__ argument as in: ``python AIPSnapshotCleaner.py -drop``
 
-
+:point_right: __NOTE:__ Ensure that the id being used for connecting to AAD (the _username_ specified in the __dashboard__ section in the YAML file) has __admin__ rights to the HD dashboard. Else, some actions will fail.
