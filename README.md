@@ -10,7 +10,7 @@ It uses the following Python packages. Ensure these are installed using the Pyth
 - requests
 - PyYAML
 
-Refer to [Installing Python Modules] (https://docs.python.org/3.6/installing/) webpage for more information on how to install Python modules.
+Refer to [Installing Python Modules](https://docs.python.org/3.6/installing/) webpage for more information on how to install Python modules.
 
 ## First time setup
 1. Copy the files and folder into a folder named AIP_SnapshotCleaner.
