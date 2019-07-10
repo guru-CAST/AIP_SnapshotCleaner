@@ -369,6 +369,7 @@ def is_snapshot_latest_monthly(application_name, snapshot_datetime):
                 elif (snap_dttm > snapshot_datetime):
                     logger.debug('Snapshot %s is > %s. Newer snapshot found.' % (snap_dttm, snapshot_datetime))
                     is_latest = False
+                    break
 
     return is_latest
 
@@ -401,6 +402,7 @@ def is_snapshot_latest_quarterly(application_name, snapshot_datetime):
                     logger.debug('Snapshot %s is > %s. Newer snapshot found.' % (snap_dttm, snapshot_datetime))
                     is_latest = False
                     num_snapshots_in_qtr += 1
+                    break
 
     # If only one snapshot exists, mark it as the latest.
     if (num_snapshots_in_qtr == 0):
@@ -435,6 +437,7 @@ def is_snapshot_latest_yearly(application_name, snapshot_datetime):
                     logger.debug('Snapshot %s is > %s. Newer snapshot found.' % (snap_dttm, snapshot_datetime))
                     is_latest = False
                     num_snapshots_in_year += 1
+                    break
 
     # If only one snapshot exists, mark it as the latest.
     if (num_snapshots_in_year == 0):
@@ -519,11 +522,9 @@ def drop_snapshots():
 
                 # Create the CLI only once.
                 if (len(snapshots_to_drop) == 1):
-                    cli_command = [CAST_HOME]
-                    cli_command.append('\\cast-ms-cli.exe ')
-                    cli_command.append('DeleteSnapshotsInList ')
-                    cli_command.append('-connectionProfile ')
-                    cli_command.append('"')
+                    cli_command = ['"']
+                    cli_command.append(CAST_HOME)
+                    cli_command.append('\\cast-ms-cli.exe" DeleteSnapshotsInList -connectionProfile "')
                     cli_command.append(profile_name)
                     cli_command.append('" ')
                     cli_command.append('-appli ')
@@ -566,6 +567,10 @@ def exec_cli(cli):
         logger.debug('stderr:%s' % cli_cmd.stderr)
 
         cli_cmd.check_returncode()
+
+        if (cli_cmd.returncode == 0):
+            logger.info('Marked snapshots successfully deleted.')
+
     except CalledProcessError as exc:
         logger.error('An error occurred while executing CLI:%d. CLI:%s' % (exc.returncode, exc.cmd))
         raise
