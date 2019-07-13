@@ -522,12 +522,9 @@ def drop_snapshots():
 
                 # Create the CLI only once.
                 if (len(snapshots_to_drop) == 1):
-                    cli_command = ['"']
-                    cli_command.append(CAST_HOME)
-                    cli_command.append('\\cast-ms-cli.exe" DeleteSnapshotsInList -connectionProfile "')
+                    cli_command = f'"{CAST_HOME}\\cast-ms-cli.exe" DeleteSnapshotsInList -connectionProfile "'
                     cli_command.append(profile_name)
-                    cli_command.append('" ')
-                    cli_command.append('-appli ')
+                    cli_command.append('" -appli ')
                     cli_command.append( app_name)
                     cli_command.append(' -dashboardService ')
                     cli_command.append(adg_db)
