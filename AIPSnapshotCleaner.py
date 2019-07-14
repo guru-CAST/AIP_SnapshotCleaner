@@ -90,6 +90,9 @@ def read_pmx():
                 name = cp.getAttribute('name')
                 schema = cp.getAttribute('schema')
                 connection_profiles.append({"name": name, "schema": schema})
+    except (IOError) as exc:
+        logger.error('Profile names retrival failed.. Aborting.. Error:%s' % (str(exc)))
+        raise FileNotFoundError from IOError
     finally:
             logger.debug('Names found: %s' % connection_profiles)
 
@@ -112,6 +115,9 @@ def get_apps():
     logger.debug('url:%s' % url)
 
     try:
+        # Before making the REST call, ensure that AAD cache is refreshed.
+        reload_server_mem_cache()
+
         with requests.get(url, headers=__headers, auth=auth, stream=True) as response:
             response.raise_for_status()
 
@@ -132,12 +138,39 @@ def get_apps():
     except (requests.HTTPError) as exc:
         logger.error('requests.get failed while retrieving list of applications. Message:%s' % (str(exc)))
         raise
-    #except requests.RequestException as exc:
-        #logger.error('requests.get failed, while retrieving list of applications. Message:%s' % (str(exc)))
-        #raise
-    #except requests.TimeOut as exc:
-        #logger.error('requests.get timedout while retrieving list of applications. Message:%s' % (str(exc)))
-        #raise
+    except:
+        logger.error('An exception occurred while retrieving list of applications. Aborting..')
+        raise
+
+def reload_server_mem_cache():
+    """
+    Performs AAD server memory cache. This is needed to ensure that all apps and snapshots
+    are visible before making the AAD REST API calls to retireve apps and snapshots.
+    
+    Returns:
+        None - Only throws exception, if one occurs.
+    """
+
+    response = ""
+
+    # Retrieve names of all apps.
+    __headers = {'Accept':'application/json'}
+
+    url =  base_url + '/server/reload'
+    auth = (username, password)
+
+    logger.debug('url:%s' % url)
+
+    try:
+        with requests.get(url, headers=__headers, auth=auth, stream=True) as response:
+            response.raise_for_status()
+
+            if (response.status_code == requests.codes.ok):
+                # Not expecting any data from this call.
+                pass
+    except (requests.HTTPError) as exc:
+        logger.error('requests.get failed while reloading server memory cache. Message:%s' % (str(exc)))
+        raise
 
 def get_all_snapshots():
     """
@@ -145,7 +178,6 @@ def get_all_snapshots():
     Invokes the get_snapshots() function to retrieve all snapshots for the given app.
     """
     global snapshot_info
-
 
     # Spin thru the apps and retrieve snapshot href.
     for app in apps:
@@ -242,7 +274,7 @@ def mark_snapshots_for_deletion():
     keep_baseline = config_settings['retention_policy']['keep_baseline']
     latest_snapshots_to_keep = config_settings['retention_policy']['keep_latest_n_snapshots']
 
-    logger.debug('Retention policies - CY:%s|PY:%s|OY:%s|baseline:%s' % (curr_year_policy, prev_year_policy, other_years_policy, keep_baseline))
+    logger.info('Retention policies - CY:%s|PY:%s|OY:%s|baseline:%s' % (curr_year_policy, prev_year_policy, other_years_policy, keep_baseline))
 
     for i, elem in enumerate(snapshot_info):
         # Get the date of the snapshot.
@@ -522,22 +554,19 @@ def drop_snapshots():
 
                 # Create the CLI only once.
                 if (len(snapshots_to_drop) == 1):
-                    cli_command = f'"{CAST_HOME}\\cast-ms-cli.exe" DeleteSnapshotsInList -connectionProfile "'
-                    cli_command.append(profile_name)
-                    cli_command.append('" -appli ')
-                    cli_command.append( app_name)
-                    cli_command.append(' -dashboardService ')
-                    cli_command.append(adg_db)
-                    cli_command.append(' -snapshots ')
+                    cli_command = [ \
+                            f'"{CAST_HOME}\\cast-ms-cli.exe" DeleteSnapshotsInList -connectionProfile' \
+                            f' "{profile_name}" -appli {app_name} -dashboardService {adg_db} -snapshots ' \
+                        ]
 
                 #logger.debug('CLI Command:%s' % cli_command[0])
                 #print('CLI Command:%s' % cli_command)
 
                 logger.debug('CLI Command:%s' % (cli_command))
             else:
-                logger.info('App:%s | Snapshot date:%s | INFO ONLY - Snapshot marked for deletion, but delete_snapshots is False.' % (app_name, snap_dttm))
+                logger.info('App:%s | Snapshot date:%s | Snapshot marked for deletion, but -drop arg not supplied. NOT deleting.' % (app_name, snap_dttm))
         else:
-            logger.debug('App:%s | Snapshot date:%s | Keeping this snapshot.' % (app_name, snap_dttm))
+            logger.info('App:%s | Snapshot date:%s | Not marked for deletion. Keeping this snapshot.' % (app_name, snap_dttm))
 
     # Applicable only in the case of the last app in the loop.
     #

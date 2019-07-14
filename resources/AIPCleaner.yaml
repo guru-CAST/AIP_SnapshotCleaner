@@ -1,12 +1,15 @@
 Dashboard:
-  URL: http://localhost:8090/CAST-Health-Engineering/rest
+  #URL: http://demoserver:8090/CAST-Health-Engineering/rest
+  URL: http://localhost:8080/CAST-Health-Engineering/rest
+  # Ensure that the username below has admin access to the above dashboard.
   username: admin
   password: cast
   # Update the domain name below, if it is different from ADD (which is the CAST default for HD)
   domain: AAD
  
 CMS:
-  pmx_file: D:\CAST\WORK\cast-ms.connectionProfiles.pmx
+  #pmx_file: D:\CAST\WORK\cast-ms.connectionProfiles.pmx
+  pmx_file: C:\Users\gpr\AppData\Roaming\CAST\CAST\8.3\cast-ms.connectionProfiles.pmx
  
 # Retention policy legends:
 # M - Monthly
@@ -21,5 +24,5 @@ retention_policy:
   keep_latest_n_snapshots: 2
 
 other_settings:
-  log_folder: C:\Users\GPR\Documents\AIP_SnapshotCleaner\logs
-  cast_home: D:\CAST\8.3
+  log_folder: C:\CAST\logs\AIP_SnapshotCleaner
+  cast_home: C:\CAST\8.3
