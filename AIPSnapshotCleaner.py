@@ -43,7 +43,7 @@ shandler = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s - %(filename)s [%(funcName)30s:%(lineno)-4d] %(levelname)-8s - %(message)s')
 shandler.setFormatter(formatter)
 logger.addHandler(shandler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # Global vars
 base_url = ''
@@ -558,9 +558,6 @@ def drop_snapshots():
                             f'"{CAST_HOME}\\cast-ms-cli.exe" DeleteSnapshotsInList -connectionProfile' \
                             f' "{profile_name}" -appli {app_name} -dashboardService {adg_db} -snapshots ' \
                         ]
-
-                #logger.debug('CLI Command:%s' % cli_command[0])
-                #print('CLI Command:%s' % cli_command)
 
                 logger.debug('CLI Command:%s' % (cli_command))
             else:
