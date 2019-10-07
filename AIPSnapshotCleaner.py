@@ -156,10 +156,7 @@ def get_all_snapshots():
     """
     global snapshot_info
 
-<<<<<<< Updated upstream
-=======
     profile_found = False
->>>>>>> Stashed changes
 
     # Spin thru the apps and retrieve snapshot href.
     for app in apps:
