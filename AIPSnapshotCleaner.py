@@ -21,7 +21,7 @@ Prerequisites:
    model and have generated a snapshot using that assessment model.
 2. The app and the new snapshot must be conslidated in the HD that is being used. Be sure to update the HD URL below.
 """
-__version__ = 1.0
+__version__ = 1.1
 
 import os
 import json
@@ -51,6 +51,7 @@ domain = ''
 username = ''
 password = ''
 CAST_HOME = ''
+log_level = ''
 
 apps = []
 connection_profiles = []
@@ -60,20 +61,29 @@ config_settings = {}
 
 delete_snapshots = False
 
-def read_yaml():
+def read_settings_from_yaml():
     global config_settings
+    global base_url, domain, username, password, CAST_HOME, log_level
 
     try:
         with open('resources\\AIPCleaner.yaml') as y_file:
             config_settings = yaml.safe_load(y_file)
     except (FileNotFoundError, IOError) as exc:
         logger.error('An IO exception occurred while opening YAML file. Error: %s' % (exc))
+        raise exc
     except yaml.YAMLError as exc:
         logger.error('An exception occurred while reading YAML file. Error: %s' % (exc))
-    except:
-        logger.error('An unknow exception occurred while reading YAML file.')
-    finally:
-        logger.info('Setting successfully retireved from the YAML file.')
+        raise exc
+
+    # Set some global vars
+    base_url = config_settings['Dashboard']['URL']
+    domain = config_settings['Dashboard']['domain']
+    username = config_settings['Dashboard']['username']
+    password = config_settings['Dashboard']['password']
+    CAST_HOME = config_settings['other_settings']['cast_home']
+    #log_level = config_settings['other_settings']['log_level']
+
+    return 0
 
 def read_pmx():
     global connection_profiles
@@ -146,20 +156,48 @@ def get_all_snapshots():
     """
     global snapshot_info
 
+<<<<<<< Updated upstream
+=======
+    profile_found = False
+>>>>>>> Stashed changes
 
     # Spin thru the apps and retrieve snapshot href.
     for app in apps:
         snapshots = []
+        mngt_profile = ''
+        s_href = ''
 
         for key, val in app.items():
+            # In some rare cases when there isn't a connection profile for an app, an unhandled exception
+            # is generated during snapshot deletion in the drop_snapshots() method.
+            # To prevent that from happening, skip the apps which do not have a connection profile.
+            # This also provides the added benefit of not having to retrieve snapshots for those apps, saving some processing time.
+
+            if (key == 'adgDatabase'):
+                adg_db = val
+                mngt_name = adg_db.replace('_central', '_mngt')
+                profile_found = False
+
+                for prof in connection_profiles:
+                    if (mngt_name in prof.values()):
+                        profile_found = True
+                        break
+                    else:
+                        next
+
+            # Retreive all snapshots for an app, by passing the snapshot URL as the argument.
             if (key == 's_href'):
                 s_href = val
 
-                # Retreive all snapshots for an app, by passing the snapshot URL as the argument.
+            # Retrieve snapshots only if we have the profile and the s_href values.
+            # Just to be sure, also ensure that we have a mngt_name (which confirms 
+            # that we already checked for its existance, as it is possible that we 
+            # do not have the profile verified, yet).
+            if (profile_found) and (s_href) and (profile_found):
                 snapshots = get_snapshots(s_href)
 
-            for snapshot in snapshots:
-                snapshot_info.append(snapshot)
+                for snapshot in snapshots:
+                    snapshot_info.append(snapshot)
 
     logger.debug(snapshot_info)
 
@@ -474,9 +512,10 @@ def preserve_baseline_snapshots():
 
 def drop_snapshots():
     # NOTE:
-    # Snapshots will NOT BE DELETED unless the argument 'drop-snapshots' is 
-    # passed in. Otherwise, the program only displays the list of snapshots
-    # that have been marked for deletion but no snapshots will be deleted.
+    # Snapshots will NOT BE DELETED unless the -drop argument is passed
+    # in. Otherwise, the program only displays the list of snapshots that
+    # have been marked for deletion but no snapshots will be deleted.
+
     prev_app_name = ''
     snapshots_to_drop = []
     cli_command = []
@@ -488,6 +527,10 @@ def drop_snapshots():
 
         # Get the connection profile name from the connection_profiles list, using the 
         # mngt schema name.
+        #
+        # TODO:
+        # As discovered by MSH, the call to get profile_name fails when the entry does not exist.
+        # This has to be modified to ensure that 
         mngt_name = adg_db.replace('_central', '_mngt')
         profile_name = next(item for item in connection_profiles if item["schema"] == mngt_name)['name']
 
@@ -575,61 +618,21 @@ def exec_cli(cli):
         logger.error('An error occurred while executing CLI:%d. CLI:%s' % (exc.returncode, exc.cmd))
         raise
 
-def main():
-    global base_url, domain, username, password, CAST_HOME
-    try:
-        # Read the YAML file to get the config settings.
-        read_yaml()
-
-        # Set some global vars
-        base_url = config_settings['Dashboard']['URL']
-        domain = config_settings['Dashboard']['domain']
-        username = config_settings['Dashboard']['username']
-        password = config_settings['Dashboard']['password']
-        CAST_HOME = config_settings['other_settings']['cast_home']
-
-        # Setup logging to file
-        log_file = config_settings['other_settings']['log_folder'] + '\\AIPSnapshotCleaner' + time.strftime('%Y%m%d%H%M%S') + '.log'
-        fhandler = logging.FileHandler(log_file, 'w')
-        fhandler.setFormatter(formatter)
-        logger.addHandler(fhandler)
-
-        # Read the CAST-MS conection profile file to retrieve profile names.
-        read_pmx()
-        # Grab names of all apps from the dashboard via REST call.
-        get_apps()
-        # Retireve a list of snapshots from the dashboard via REST call.
-        get_all_snapshots()
-        # Indentify snapshots that can be deleted.
-        mark_snapshots_for_deletion()
-        # Delete snapshots that are marked for deletion.
-        drop_snapshots()
-
-    except:
-        logger.error('Aborting due to a prior exception. See the log file for complete details.')
-        sys.exit(6)
-    else:
-        pass
-
-# Start here
-# TODO: Need an argument to indicate if snapshot need to be deleted.
-
-if __name__ == "__main__":
-    logger.info('Starting process')
+def process_args():
     args = sys.argv[1:]
 
-    count = len(args)
+    argc = len(args)
 
-    if (count == 1):
+    if (argc == 1):
         delete_flag = args.__getitem__(0)
-        print(delete_flag)
+
         if (args[0] == '-drop'):
             logger.info('The -drop argurment activated. Snapshots will be dropped.')
             delete_snapshots = True
         else:
             logger.warn('The %s argurment is unknown. Ignoring it.' % args[0])
-    elif (count > 1):
-        logger.error('Invalid number of arguments passed, when expecting one. Aborting.')
+    elif (argc > 1):
+        logger.error('Invalid number of arguments passed; Expecting one, encountered: %d. Aborting.' % argc)
         sys.exit(1)
     else:
         # Zero args passed. Which means that snapshots should not be deleted.
@@ -637,6 +640,46 @@ if __name__ == "__main__":
         logger.info('The -drop argurment was not passed in. Snapshots will not be dropped.')
         logger.info('To drop sanpshots, invoke snasphot clearner with a -drop argument.')
 
+def main():
+    logger.info('Starting process')
+    try:
+        # Process the arguments passed in.
+        process_args()
+
+        # Read the YAML file to get the config settings.
+        read_settings_from_yaml()
+
+        # Setup logging to file
+        log_file = config_settings['other_settings']['log_folder'] + '\\AIPSnapshotCleaner' + time.strftime('%Y%m%d%H%M%S') + '.log'
+        fhandler = logging.FileHandler(log_file, 'w')
+        fhandler.setFormatter(formatter)
+        logger.addHandler(fhandler)
+        #logger.setLevel(logging.log_level)
+
+        # Read the CAST-MS conection profile file to retrieve profile names.
+        read_pmx()
+
+        # Grab names of all apps from the dashboard via REST call.
+        get_apps()
+
+        # Retireve a list of snapshots from the dashboard via REST call.
+        get_all_snapshots()
+
+        # Indentify snapshots that can be deleted.
+        mark_snapshots_for_deletion()
+
+        # Delete snapshots that are marked for deletion.
+        drop_snapshots()
+
+    except:
+        logger.error('Aborting due to a prior exception. See the log file for complete details.')
+        sys.exit(6)
+
+    return 0
+
+# Start here
+
+if __name__ == "__main__":
     main()
 
 sys.exit(0)
