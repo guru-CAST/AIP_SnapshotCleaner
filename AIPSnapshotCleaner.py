@@ -21,7 +21,7 @@ Prerequisites:
    model and have generated a snapshot using that assessment model.
 2. The app and the new snapshot must be conslidated in the HD that is being used. Be sure to update the HD URL below.
 """
-__version__ = 1.1
+__version__ = 2.0
 
 import os
 import json
@@ -156,10 +156,7 @@ def get_all_snapshots():
     """
     global snapshot_info
 
-<<<<<<< Updated upstream
-=======
     profile_found = False
->>>>>>> Stashed changes
 
     # Spin thru the apps and retrieve snapshot href.
     for app in apps:
@@ -651,6 +648,9 @@ def main():
 
         # Setup logging to file
         log_file = config_settings['other_settings']['log_folder'] + '\\AIPSnapshotCleaner' + time.strftime('%Y%m%d%H%M%S') + '.log'
+
+        # TODO:
+        # Before attempting to write to the log file, ensure that once can be created.
         fhandler = logging.FileHandler(log_file, 'w')
         fhandler.setFormatter(formatter)
         logger.addHandler(fhandler)
