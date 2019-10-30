@@ -488,7 +488,7 @@ def drop_snapshots():
         try:
             adg_db = next(item for item in apps if item["name"] == app_name)['adgDatabase']
         except StopIteration:
-            continue
+            pass
 
         # Get the connection profile name from the connection_profiles list, using the
         # mngt schema name.
@@ -497,7 +497,7 @@ def drop_snapshots():
         try:
             profile_name = next(item for item in connection_profiles if item["schema"] == mngt_name)['name']
         except StopIteration:
-            continue
+            pass
 
         if (prev_app_name == ''):
             prev_app_name = app_name
