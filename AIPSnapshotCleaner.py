@@ -3,15 +3,15 @@ Name: AIPSnapshotCleaner.py
 
 Author: Guru Pai
 
-Date: Thu 05/24/2019 
+Date: Thu 05/24/2019
 
 # TODO
 This python script inserts two background facts into AAD.
-1. 
-2. 
+1.
+2.
 
 Arguments:
-1. 
+1.
 
 NOTE:
 By design, this script populates the background fact for a single app.
@@ -183,7 +183,7 @@ def get_snapshots(s_href):
                 data = response.json()
 
             for item in data:
-                # We just need that latest snapshot id, as that is the only thing snapshot 
+                # We just need that latest snapshot id, as that is the only thing snapshot
                 # that needs to be updated. The REST call returns that as the first entry.
 
                 snapshot = {}
@@ -211,7 +211,7 @@ def mark_snapshots_for_deletion():
     """
     This function marks snapshots that are to be deleted. It does NOT DELETE them.
 
-    Snapshots which need to be deleted are marked for deletion by setting the delete_flag 
+    Snapshots which need to be deleted are marked for deletion by setting the delete_flag
     to True, in the snapshot_info list.
 
     Logic:
@@ -219,7 +219,7 @@ def mark_snapshots_for_deletion():
     2. Check which year it belongs to. The script only considers the current year, previous year
        and other years.
     3. Loop thru each snapshot in snapshot_info:
-    4.    For each snapshot for an app, based on the retention criteria for the current, previous and other years, 
+    4.    For each snapshot for an app, based on the retention criteria for the current, previous and other years,
           call the appropriate funtion to determine if the snapshot is the latest or if there are later snapshots.
     5.    If a newer snapshot exists, mark the current snapshot for deletion UNLESS it meets the 'keep_latest_n_snapshots'
           criteria.
@@ -253,7 +253,7 @@ def mark_snapshots_for_deletion():
 
         # Retain the latest N snapshots, as specified in the YAML file.
         #
-        # NOTE: The REST call always returns snapshots in a descending order. 
+        # NOTE: The REST call always returns snapshots in a descending order.
         #       Leveraging this feature to avoid additional processing.
 
         snapshot_counter += 1
@@ -268,7 +268,7 @@ def mark_snapshots_for_deletion():
             pass
 
         if (snapshot_counter <= latest_snapshots_to_keep):
-            # Keeping the latest set of N snapshots for the app. 
+            # Keeping the latest set of N snapshots for the app.
             logger.info('Application:%s|Snapshot:%s| Snapshot will not be deleted as %d latest snapshots are to be kept. Skipping.' % (app_name, snap_dttm, latest_snapshots_to_keep))
             continue
 
@@ -303,8 +303,8 @@ def mark_snapshots_for_deletion():
             elif (other_years_policy == 'Y'):
                 ret_policy = 'Yearly'
         else:
-            # TODO: 
-            # ERROR: Unhandled. 
+            # TODO:
+            # ERROR: Unhandled.
             pass
 
         # Mark snapshots for deletion, based on the retention policy.
@@ -347,7 +347,7 @@ def mark_snapshots_for_deletion():
 def is_snapshot_latest_monthly(application_name, snapshot_datetime):
     is_latest = True # Default to True.
 
-    # For the given app, need to iterate over the snapshots for the current month 
+    # For the given app, need to iterate over the snapshots for the current month
     # and year and determine if the snapshot is the latest for the month.
 
     snapshot_year = int(snapshot_datetime.strftime('%Y'))
@@ -377,7 +377,7 @@ def is_snapshot_latest_quarterly(application_name, snapshot_datetime):
     is_latest = False
     num_snapshots_in_qtr = 0
 
-    # For the given app, need to iterate over the snapshots for the current month 
+    # For the given app, need to iterate over the snapshots for the current month
     # and year and determine if the snapshot is the latest for the month.
 
     snapshot_year = int(snapshot_datetime.strftime('%Y'))
@@ -414,7 +414,7 @@ def is_snapshot_latest_yearly(application_name, snapshot_datetime):
     is_latest = False
     num_snapshots_in_year = 0
 
-    # For the given app, need to iterate over the snapshots for the current month 
+    # For the given app, need to iterate over the snapshots for the current month
     # and year and determine if the snapshot is the latest for the month.
 
     snapshot_year = int(snapshot_datetime.strftime('%Y'))
@@ -451,7 +451,7 @@ def preserve_baseline_snapshots():
     min_snap_dttm = ''
     temp_app_name = ''
 
-    # For the given app, need to iterate over the snapshots for the current month 
+    # For the given app, need to iterate over the snapshots for the current month
     # and year and determine if the snapshot is the latest for the month.
 
     for i, elem in enumerate(snapshot_info):
@@ -460,7 +460,7 @@ def preserve_baseline_snapshots():
 
         app_dict = [x['snap_dttm'] for x in snapshot_info if x['app_name'] == app_name]
         #print(app_dict)
-        
+
         min_snap_dttm = min(app_dict)
         #print('min_snap_dttm:%s' % min_snap_dttm)
 
@@ -474,7 +474,7 @@ def preserve_baseline_snapshots():
 
 def drop_snapshots():
     # NOTE:
-    # Snapshots will NOT BE DELETED unless the argument 'drop-snapshots' is 
+    # Snapshots will NOT BE DELETED unless the argument 'drop-snapshots' is
     # passed in. Otherwise, the program only displays the list of snapshots
     # that have been marked for deletion but no snapshots will be deleted.
     prev_app_name = ''
@@ -486,7 +486,7 @@ def drop_snapshots():
         app_name = snapshot['app_name']
         adg_db = next(item for item in apps if item["name"] == app_name)['adgDatabase']
 
-        # Get the connection profile name from the connection_profiles list, using the 
+        # Get the connection profile name from the connection_profiles list, using the
         # mngt schema name.
         mngt_name = adg_db.replace('_central', '_mngt')
         profile_name = next(item for item in connection_profiles if item["schema"] == mngt_name)['name']
@@ -522,16 +522,13 @@ def drop_snapshots():
 
                 # Create the CLI only once.
                 if (len(snapshots_to_drop) == 1):
-                    cli_command = ['"']
-                    cli_command.append(CAST_HOME)
-                    cli_command.append('\\cast-ms-cli.exe" DeleteSnapshotsInList -connectionProfile "')
-                    cli_command.append(profile_name)
-                    cli_command.append('" ')
-                    cli_command.append('-appli ')
-                    cli_command.append( app_name)
-                    cli_command.append(' -dashboardService ')
-                    cli_command.append(adg_db)
-                    cli_command.append(' -snapshots ')
+                    cli_command = [
+                        F'"{CAST_HOME}\cast-ms-cli.exe" ',
+                        F' DeleteSnapshotsInList -connectionProfile "{profile_name}" ',
+                        F' -appli "{app_name}" ',
+                        F' -dashboardService "{adg_db}" ',
+                        ' -snapshots '
+                    ]
 
                 #logger.debug('CLI Command:%s' % cli_command[0])
                 #print('CLI Command:%s' % cli_command)
