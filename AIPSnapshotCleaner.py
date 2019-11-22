@@ -43,7 +43,7 @@ shandler = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s - %(filename)s [%(funcName)30s:%(lineno)-4d] %(levelname)-8s - %(message)s')
 shandler.setFormatter(formatter)
 logger.addHandler(shandler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # Global vars
 base_url = ''
@@ -567,9 +567,9 @@ def drop_snapshots():
                     cli_command.append('\\cast-ms-cli.exe" DeleteSnapshotsInList -connectionProfile "')
                     cli_command.append(profile_name)
                     cli_command.append('" ')
-                    cli_command.append('-appli ')
-                    cli_command.append( app_name)
-                    cli_command.append(' -dashboardService ')
+                    cli_command.append('-appli "')
+                    cli_command.append(app_name)
+                    cli_command.append('" -dashboardService ')
                     cli_command.append(adg_db)
                     cli_command.append(' -snapshots ')
 
@@ -593,7 +593,8 @@ def drop_snapshots():
             exec_cli(cli_command)
         except:
             logger.info('CLI:%s' % cli_command)
-            logger.error('An error occurred while deleting snapshots.')
+            logger.error('An error occurred while deleting snapshots. Refer to CAST-MS log for full details')
+            raise
 
 def exec_cli(cli):
     cli_str = ''.join(cli)
@@ -609,13 +610,15 @@ def exec_cli(cli):
         cli_cmd.check_returncode()
 
         if (cli_cmd.returncode == 0):
-            logger.info('Marked snapshots successfully deleted.')
+            logger.info('Successfully deleted snapshots marked for deletion.')
 
     except CalledProcessError as exc:
-        logger.error('An error occurred while executing CLI:%d. CLI:%s' % (exc.returncode, exc.cmd))
+        logger.error('An error occurred while executing CLI. Return code:%d. Command:%s' % (exc.returncode, exc.cmd))
         raise
 
 def process_args():
+    global delete_snapshots
+
     args = sys.argv[1:]
 
     argc = len(args)
@@ -635,7 +638,7 @@ def process_args():
         # Zero args passed. Which means that snapshots should not be deleted.
         # Snasphots marked for deletion will only be listed for INFO ONLY.
         logger.info('The -drop argurment was not passed in. Snapshots will not be dropped.')
-        logger.info('To drop sanpshots, invoke snasphot clearner with a -drop argument.')
+        logger.info('To drop sanpshots, invoke snasphot clearner with the -drop argument.')
 
 def main():
     logger.info('Starting process')
@@ -668,8 +671,8 @@ def main():
         # Delete snapshots that are marked for deletion.
         drop_snapshots()
 
-    except:
-        logger.error('Aborting due to a prior exception. See the log file for complete details.')
+    except Exception as e:
+        logger.error('Aborting due to an exception. Exception:%s' % e, exc_info=True)
         sys.exit(6)
 
     return 0

@@ -5,12 +5,13 @@ the resources/AIPCleaner.yaml file.
 
 ## Prerequisites
 The script is written in Python. Ensure that you have Python __3.6__ or above installed. 
-It uses the following Python packages. Ensure these are installed using the Python __PIP__ command. PIP installs dependent packages, where needed.
+It uses the following Python packages.
 
 - requests
 - PyYAML
 
-Refer to [Installing Python Modules](https://docs.python.org/3.6/installing/) webpage for more information on how to install Python modules.
+Use the supplied ``requirements.txt`` file to install these dependent packages. 
+To install these depenecies, use the pip command from the command prompt: ``pip -r requirements.txt``.
 
 ## First time setup
 1. Copy the files and folder into a folder named AIP_SnapshotCleaner.
