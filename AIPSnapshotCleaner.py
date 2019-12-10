@@ -484,12 +484,20 @@ def drop_snapshots():
     for snapshot in snapshot_info:
         # Get the central schema name from the apps list, by searching the app name.
         app_name = snapshot['app_name']
-        adg_db = next(item for item in apps if item["name"] == app_name)['adgDatabase']
+        # as per https://help.semmle.com/wiki/display/PYTHON/Unguarded+next+in+generator
+        try:
+            adg_db = next(item for item in apps if item["name"] == app_name)['adgDatabase']
+        except StopIteration:
+            pass
 
         # Get the connection profile name from the connection_profiles list, using the
         # mngt schema name.
         mngt_name = adg_db.replace('_central', '_mngt')
-        profile_name = next(item for item in connection_profiles if item["schema"] == mngt_name)['name']
+        # as per https://help.semmle.com/wiki/display/PYTHON/Unguarded+next+in+generator
+        try:
+            profile_name = next(item for item in connection_profiles if item["schema"] == mngt_name)['name']
+        except StopIteration:
+            pass
 
         if (prev_app_name == ''):
             prev_app_name = app_name
