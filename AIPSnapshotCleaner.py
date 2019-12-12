@@ -5,23 +5,17 @@ Author: Guru Pai
 
 Date: Thu 05/24/2019
 
-# TODO
-This python script inserts two background facts into AAD.
-1.
-2.
+This script can be used to delete snapshots from applications in CAST AIP. Snapshots are deleted bassed on the retention
+criteria specified in the YAML file. Please see the README.md file for full details.
 
 Arguments:
-1.
+1. drop - Pass this argument if snapshot are to be deleted. Else, snapshots will not be deleted.
+          Running the script without this argument will display snapshots that will potentially be deleted but the action is not performed.
 
 NOTE:
-By design, this script populates the background fact for a single app.
-
-Prerequisites:
-1. Before running this script, ensure that you have these two background facts in the application's assessment
-   model and have generated a snapshot using that assessment model.
-2. The app and the new snapshot must be conslidated in the HD that is being used. Be sure to update the HD URL below.
+1. Before running this script, ensure that the measure base has the latest snapshots consolidated.
 """
-__version__ = 1.0
+__version__ = 1.1
 
 import os
 import json
@@ -43,7 +37,7 @@ shandler = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s - %(filename)s [%(funcName)30s:%(lineno)-4d] %(levelname)-8s - %(message)s')
 shandler.setFormatter(formatter)
 logger.addHandler(shandler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # Global vars
 base_url = ''
@@ -494,15 +488,19 @@ def drop_snapshots():
         # mngt schema name.
         mngt_name = adg_db.replace('_central', '_mngt')
         # as per https://help.semmle.com/wiki/display/PYTHON/Unguarded+next+in+generator
+
+        profile_name = ''
+
         try:
             profile_name = next(item for item in connection_profiles if item["schema"] == mngt_name)['name']
         except StopIteration:
+            logger.warn('CMS connection profile not found for application:%s. Cannot process this application.' % app_name)
             pass
 
         if (prev_app_name == ''):
             prev_app_name = app_name
         elif (app_name != prev_app_name):
-            # Invoke the CLI to drop the snapshots for the prior app.
+            # Invoke the CLI to drop the snapshots for the prior app, unless its profile was not found.
 
             if (len(snapshots_to_drop) != 0):
                 cli_command.append(','.join(snapshots_to_drop))
@@ -524,24 +522,26 @@ def drop_snapshots():
 
         if (delete_flag):
             if (delete_snapshots):
-                logger.info('App:%s | Snapshot date:%s | This snapshot will be dropped' % (app_name, snap_dttm))
+                # Only if connection profile is available.
+                if (profile_name != ''):
+                    logger.info('App:%s | Snapshot date:%s | This snapshot will be dropped' % (app_name, snap_dttm))
 
-                snapshots_to_drop.append(capture_date)
+                    snapshots_to_drop.append(capture_date)
 
-                # Create the CLI only once.
-                if (len(snapshots_to_drop) == 1):
-                    cli_command = [
-                        F'"{CAST_HOME}\cast-ms-cli.exe" ',
-                        F' DeleteSnapshotsInList -connectionProfile "{profile_name}" ',
-                        F' -appli "{app_name}" ',
-                        F' -dashboardService "{adg_db}" ',
-                        ' -snapshots '
-                    ]
+                    # Create the CLI only once.
+                    if (len(snapshots_to_drop) == 1):
+                        cli_command = [
+                            F'"{CAST_HOME}\cast-ms-cli.exe" ',
+                            F' DeleteSnapshotsInList -connectionProfile "{profile_name}" ',
+                            F' -appli "{app_name}" ',
+                            F' -dashboardService "{adg_db}" ',
+                            ' -snapshots '
+                        ]
 
-                #logger.debug('CLI Command:%s' % cli_command[0])
-                #print('CLI Command:%s' % cli_command)
+                    #logger.debug('CLI Command:%s' % cli_command[0])
+                    #print('CLI Command:%s' % cli_command)
 
-                logger.debug('CLI Command:%s' % (cli_command))
+                    #logger.debug('CLI Command:%s' % (cli_command))
             else:
                 logger.info('App:%s | Snapshot date:%s | INFO ONLY - Snapshot marked for deletion, but delete_snapshots is False.' % (app_name, snap_dttm))
         else:
@@ -551,7 +551,7 @@ def drop_snapshots():
     #
     # Invoke the CLI to drop the snapshots for it.
 
-    if (len(snapshots_to_drop) != 0):
+    if (len(snapshots_to_drop) != 0) and (profile_name != ''):
         cli_command.append(','.join(snapshots_to_drop))
 
         try:
